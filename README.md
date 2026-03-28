@@ -1,60 +1,87 @@
-# Markdown Studio - Precision A4 Pagination Engine
+# 🖊️ Markdown Studio - Professional A4 Precision Engine
 
-**Markdown Studio** is a high-fidelity Markdown previewer and PDF export engine designed specifically for professionals who require strict **A4 document precision** (Print-Ready Standards).
+**Markdown Studio** is a premium, high-fidelity Markdown editor designed for document-perfect precision. Built for professionals who require strict **A4 document standards**, it bridges the gap between raw markdown and print-ready PDF output with a focus on minimalist aesthetics and mathematical accuracy.
 
-Unlike standard Markdown viewers, this engine uses a custom **Atomic Pagination System** that intelligently decomposes complex elements (like tables and lists) to maximize page-fill while maintaining mathematically perfect margins.
+![Logo](public/favicon.svg)
 
 ---
-
-## 📐 The "Fortress" Margin Engine
-
-Markdown Studio is built on the **v3.4.1 Precision Engine**, featuring:
-
-- **Strict Symmetrical Margins**: Mathematically locked 2.54cm (1 inch) buffers on all four sides of every page.
-- **Symmetrical Scaling**: A real-time 1:1 preview that matches the final PDF export with pixel-perfect accuracy.
-- **Zero-Bleed Containment**: Global `word-break` and `pre-wrap` enforcement ensures that no character or symbol can physically violate the professional margin zones.
 
 ## 🚀 Key Features
 
-### 1. Atomic Element Splitting
-Large, indivisible blocks (like long tables or bulleted lists) are automatically decomposed into atomic units. This allows the engine to fill the bottom of Page 1 and continue seamlessly on Page 2, eliminating the "early-break" whitespace common in other PDF generators.
+### 📐 The "Fortress" Pagination Engine (v3.4.1+)
+Markdown Studio uses a custom **Atomic Pagination System** that intelligently decomposes complex elements (like tables and lists) to maximize page-fill while maintaining mathematically perfect margins.
 
-### 2. Precise Top-Alignment
-Using margin-collapse logic, every page starts exactly at the 1-inch mark. Headings and paragraphs hit the top margin line flush, ensuring a consistent vertical rhythm throughout the document.
+- **Strict 2.54cm (1-Inch) Margins**: Guaranteed symmetrical buffers on all four sides of every page.
+- **Atomic Element Splitting**: Indivisible blocks (tables/lists) are decomposed into atomic units, preventing awkward whitespace at page breaks.
+- **Smart Heading Glue**: Automatically moves "orphaned" headers to the next page to maintain document readability.
+- **Zero-Bleed Containment**: Global `word-break` and `pre-wrap` enforcement ensures content never violates professional margin zones.
 
-### 3. Smart Heading Glue (60px)
-Built-in intelligence prevents "orphaned" headers. If a heading would sit alone at the bottom of a page without enough content to follow, the engine automatically moves it to the next page to maintain document readability.
+### 🍱 Premium Minimalist UI
+- **Cinematic 16:9 Workspace**: A focused, distraction-free editing environment.
+- **Docs Mode**: Integrated documentation and high-quality sample uploads.
+- **Real-Time 1:1 Preview**: What you see in the editor is exactly what you get in the PDF export.
+- **Mobile Optimized**: A fluid, tabbed interface for editing on the go (v3.6+).
 
-### 4. Professional Typography
-- **Primary Font**: Inter (Premium sans-serif)
-- **Code Engine**: JetBrains Mono with automatic wrapping
-- **Layout**: Optimized for 96 DPI A4 Standard (794px x 1123px)
+### 🛠️ Export & Sharing
+- **High-Fidelity PDF Export**: One-click generation using a dedicated headless capture buffer.
+- **Clickable PDF Links**: Full support for internal and external hyperlinking in exported documents.
+- **Deep Syntax Highlighting**: Professional-grade code block rendering for developers.
 
 ---
 
-## 🛠️ Technological Stack
+## 💻 Tech Stack
 
-- **Core**: React + Vite
-- **Styling**: TailwindCSS + Vanilla CSS (Atomic Architecture)
-- **Logic**: Custom Recursive Pagination Algorithm
-- **Rendering**: React-Markdown + Remark-GFM + Rehype-Highlight
+- **Core Framework**: [React](https://reactjs.org/) + [Vite](https://vitejs.dev/) (Ultra-fast development and optimized builds)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + Custom Vanilla CSS (Atomic Design System)
+- **Icons**: [Lucide React](https://lucide.dev/) (Clean, consistent iconography)
+- **Markdown Logic**: 
+  - `react-markdown`: Core rendering engine
+  - `remark-gfm`: GitHub Flavored Markdown support
+  - `rehype-highlight`: Lowlight-powered syntax highlighting
+- **Export Engine**: Custom Headless DOM Capture (Print-Ready)
+
+---
 
 ## 📥 Getting Started
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/Shrikanth70/Markdown-Studio.git
-    cd Markdown-Studio
-    ```
-2.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-3.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
+### 1. Installation
+Clone the repository and install dependencies:
+```bash
+git clone https://github.com/Shrikanth70/Markdown-Studio.git
+cd md-viewer
+npm install
+```
+
+### 2. Development
+Launch the development server:
+```bash
+npm run dev
+```
+
+### 3. Production Build
+Create an optimized production bundle:
+```bash
+npm run build
+```
 
 ---
 
-*Built with precision by Shrikanth for Markdown Studio (using Antigravity).*
+## 📂 Project Structure
+
+```text
+├── src/
+│   ├── components/       # UI Components (Editor, Preview, Navbar, Actions)
+│   ├── utils/            # Pagination logic and PDF Export Engine
+│   ├── App.jsx           # Main Application State & Layout
+│   └── index.css         # Global A4 Workspace Styles
+├── public/               # Static assets (Favicon, etc.)
+└── index.html            # Entry point
+```
+
+---
+
+## 🤝 Contributing
+Contributions are welcome! Feel free to open issues or submit pull requests to improve the pagination engine or UI.
+
+**Developed with precision by [Shrikanth](https://github.com/Shrikanth70).**
+*Part of the Markdown Studio Suite (v4.1).*
