@@ -1,0 +1,18 @@
+# Markdown Studio - Deployment Lockdown
+instructions.txt
+ui.png
+
+# Standard JS/Vite Exclusions
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+# IDE Folders
+.vscode/
+.idea/
+.gemini/

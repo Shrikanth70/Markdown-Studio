@@ -1,0 +1,238 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  --primary: #111111;
+  --dark-gray: #444444;
+  --medium-gray: #777777;
+  --light-gray: #E5E5E5;
+  --white: #FFFFFF;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #333333; /* Default Workspace Background */
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+}
+
+/* 16:9 Aspect Ratio Container */
+.aspect-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+/* Custom Scrollbar - Minimalist */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* DOCUMENT WORKSPACE */
+.document-board {
+  background-color: #333333; 
+}
+
+/* DOCUMENT SHEET (PAPER) */
+.prose-document {
+  max-width: none;
+  line-height: 1.5;
+  color: #111111;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+}
+
+/* DOCUMENT PAGE COMPONENT (Live Preview Only) */
+.document-page {
+  width: 794px; /* A4 at 96dpi */
+  height: 1123px;
+  background-color: #ffffff;
+  box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+  margin-bottom: 2rem;
+  padding: 2.54cm !important; /* Standard 'Normal' 2.54cm margins */
+  flex-shrink: 0;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+/* EXPORT SPECIFIC PAGE (Capture Ready) */
+.export-page {
+  display: block !important;
+  width: 794px !important;
+  height: 1123px !important;
+  background: #ffffff !important;
+  margin: 0 !important;
+  padding: 2.54cm !important; 
+  position: relative !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure children inside export pages stack correctly */
+.export-page .prose-document * {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+}
+
+/* PRECISE TOP ALIGNMENT (v3.2) */
+.page-content > *:first-child {
+  margin-top: 0 !important;
+}
+
+.prose-document h1 {
+  font-size: 16pt !important;
+  font-weight: 800;
+  margin-top: 0;
+  margin-bottom: 0.8em;
+  border-bottom: 2px solid #111;
+  padding-bottom: 0.5em; 
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.prose-document h2 {
+  font-size: 14pt !important;
+  font-weight: 700;
+  margin-top: 1.8em; /* Increased to prevent crowding */
+  margin-bottom: 0.6em;
+  border-bottom: 1px solid #E5E5E5;
+  padding-bottom: 0.4em; 
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.prose-document h3 {
+  font-size: 12pt !important;
+  font-weight: 700;
+  margin-top: 1.25em;
+  margin-bottom: 0.4em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prose-document p, 
+.prose-document li {
+  font-size: 10.5pt !important;
+  margin-bottom: 0.8em;
+  line-height: 1.6;
+  text-align: justify;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2em;
+}
+
+.prose-document ul, 
+.prose-document ol {
+  margin-bottom: 1em;
+  padding-left: 0;
+  list-style-position: inside; /* Force bullets into content zone */
+}
+
+.prose-document blockquote {
+  border-left: 4px solid #111;
+  padding: 0.6em 1.25em;
+  font-style: italic;
+  margin: 1.5em 0;
+  color: #333;
+  background: #F9F9F9;
+}
+
+.prose-document code {
+  font-size: 9pt !important;
+  background: #F4F4F4;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  line-height: 1; /* Ensure inline code doesn't shift lines */
+}
+
+.prose-document pre {
+  background: #111;
+  color: #FFF;
+  padding: 1.5em; /* Increased padding */
+  border-radius: 6px;
+  margin: 1.5em 0;
+  overflow: hidden !important; /* Total containment */
+  line-height: 1.5 !important; /* Stable line height for block code */
+  white-space: pre-wrap !important; /* Force wrap long lines */
+  word-wrap: break-word !important;
+}
+
+.prose-document pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 8.5pt !important;
+  line-height: 1.5 !important;
+  display: block;
+  white-space: pre-wrap !important;
+}
+
+.prose-document table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+}
+
+.prose-document th, 
+.prose-document td {
+  border: 1px solid #E5E5E5;
+  padding: 0.6em;
+  text-align: left;
+}
+
+.prose-document th {
+  background: #F9F9F9;
+  font-weight: 700;
+}
+
+.prose-document a {
+  color: #111;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-document img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 2px;
+  margin: 1.5em auto;
+  display: block;
+}
+
+.prose-document hr {
+  border: none;
+  border-top: 1px solid #E5E5E5;
+  margin: 1.5em 0;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
