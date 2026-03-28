@@ -57,4 +57,4 @@ Built-in intelligence prevents "orphaned" headers. If a heading would sit alone 
 
 ---
 
-*Built with precision by Shrikanth for Markdown Studio.*
+*Built with precision by Shrikanth for Markdown Studio (using Antigravity).*
