@@ -1,14 +1,14 @@
-# 🖊️ Markdown Studio - Professional A4 Precision Engine
+#  Markdown Studio - Professional A4 Precision Engine
 
 **Markdown Studio** is a premium, high-fidelity Markdown editor designed for document-perfect precision. Built for professionals who require strict **A4 document standards**, it bridges the gap between raw markdown and print-ready PDF output with a focus on minimalist aesthetics and mathematical accuracy.
 
-![Logo](public/favicon.svg)
+![Logo](public/favicon.svg)**Markdown Studio**
 
 ---
 
 ## 🚀 Key Features
 
-### 📐 The "Fortress" Pagination Engine (v3.4.1+)
+###  The "Fortress" Pagination Engine (v3.4.1+)
 Markdown Studio uses a custom **Atomic Pagination System** that intelligently decomposes complex elements (like tables and lists) to maximize page-fill while maintaining mathematically perfect margins.
 
 - **Strict 2.54cm (1-Inch) Margins**: Guaranteed symmetrical buffers on all four sides of every page.
@@ -83,5 +83,5 @@ npm run build
 ## 🤝 Contributing
 Contributions are welcome! Feel free to open issues or submit pull requests to improve the pagination engine or UI.
 
-**Developed with precision by [Shrikanth](https://github.com/Shrikanth70).**
-*Part of the Markdown Studio Suite (v4.1).*
+**Developed with precision by [Shrikanth](https://github.com/Shrikanth70).** *(Using Antigravity + Chatgpt)*
+
