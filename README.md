@@ -2,7 +2,6 @@
 
 **Markdown Studio** is a premium, high-fidelity Markdown editor designed for document-perfect precision. Built for professionals who require strict **A4 document standards**, it bridges the gap between raw markdown and print-ready PDF output with a focus on minimalist aesthetics and mathematical accuracy.
 
-![Logo](public/favicon.svg)**Markdown Studio**
 
 ---
 
