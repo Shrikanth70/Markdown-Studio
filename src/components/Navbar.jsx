@@ -37,10 +37,6 @@ const Navbar = ({ onAbout, onDocs, currentView }) => {
           <Layout size={16} />
           <span className="hidden sm:inline italic">Docs Mode</span>
         </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold opacity-30 cursor-not-allowed text-primary">
-          <Save size={16} />
-          <span className="hidden sm:inline">Saved</span>
-        </button>
         
         <div className="h-6 w-px mx-1 bg-lightGray"></div>
         
@@ -51,16 +47,6 @@ const Navbar = ({ onAbout, onDocs, currentView }) => {
           <Download size={14} />
           <span className="hidden sm:inline">Download PDF</span>
         </button>
-        
-        {/* Theme Toggle Placeholder - Simple Circle */}
-        <div className="p-1 px-1.5">
-          <div 
-            className="w-10 h-10 rounded-full border border-lightGray bg-white flex items-center justify-center text-mediumGray shadow-sm hover:shadow-md transition-shadow cursor-default"
-            title="Placeholder Control"
-          >
-             <div className="w-2.5 h-2.5 rounded-full bg-lightGray"></div>
-          </div>
-        </div>
       </div>
     </nav>
   );
