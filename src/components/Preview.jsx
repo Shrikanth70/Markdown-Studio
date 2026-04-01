@@ -301,10 +301,15 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
         </div>
 
         {/* PAGINATED PAGES (Preview) */}
-        <div className="w-full h-full flex flex-col items-center">
+        <div className="w-full flex-1 flex flex-col items-center pb-24">
           <div
-            className="origin-top transition-transform duration-500 pb-[400px]"
-            style={{ transform: `scale(${scale})`, width: `${A4_WIDTH_PX}px` }}
+            className="origin-top transition-all duration-500"
+            style={{ 
+              transform: `scale(${scale})`, 
+              width: `${A4_WIDTH_PX}px`,
+              height: `${(pages.length > 0 ? pages.length * 1123 + (pages.length * 48) : 1123)}px`,
+              marginBottom: `-${(pages.length > 0 ? pages.length * 1123 + (pages.length * 48) : 1123) * (1 - scale)}px`
+            }}
           >
             {pages.length > 0 ? (
               pages.map((pageEntries, pageIdx) => (
