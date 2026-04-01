@@ -84,3 +84,10 @@ Contributions are welcome! Feel free to open issues or submit pull requests to i
 
 **Developed with precision by [Shrikanth](https://github.com/Shrikanth70).** *(Using Antigravity + Chatgpt)*
 
+
+
+## Recent Updates
+- Improved mobile responsive UI toolbar.
+- Cleaned up formatting logic (removed buggy native color picker).
+- Improved cursor accuracy mapping.
+- Added native page break and new line macros.
