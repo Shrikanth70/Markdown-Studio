@@ -2,22 +2,60 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeRaw from 'rehype-raw';
+import remarkBreaks from 'remark-breaks';
 import 'highlight.js/styles/github.css';
 import { Layout, FileText, Printer, CheckCircle } from 'lucide-react';
 
 const A4_HEIGHT_PX = 1123; // at 96 DPI
 const A4_WIDTH_PX = 794;
-const TOP_MARGIN_PX = 96; // 2.54 cm / 1 inch
-const BOTTOM_MARGIN_PX = 96; // 2.54 cm / 1 inch
-// Exact 1-inch content framing - rely entirely on CSS padding
-const PAGE_CONTENT_LIMIT = 931;
+
+const BORDER_MAP = {
+  none: 'none',
+  thin: '1px solid currentColor',
+  medium: '2px solid currentColor',
+  thick: '4px solid currentColor'
+};
+
+const COLOR_MAP = {
+  black: '#000000',
+  'dark-gray': '#333333',
+  gray: '#666666'
+};
 
 const VOID_ELEMENTS = ['hr', 'img', 'br', 'area', 'base', 'col', 'embed', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
 
-const Preview = ({ markdown }) => {
+const Preview = ({ markdown, border, fontColor, imageWidth }) => {
   const [pages, setPages] = useState([]);
   const [isPaginating, setIsPaginating] = useState(false);
+  const [scale, setScale] = useState(0.62);
   const measurerRef = useRef(null);
+
+  const marginPx = 96;
+  const pageContentLimit = A4_HEIGHT_PX - (marginPx * 2);
+  const colorStyle = COLOR_MAP[fontColor] || '#111111';
+  const measurerWidth = A4_WIDTH_PX - (marginPx * 2);
+
+  // Use outline instead of border to prevent layout shifts and pagination breakage
+  const outlineStyle = BORDER_MAP[border] && border !== 'none' ? BORDER_MAP[border] : 'none';
+  const outlineOffset = '16px';
+
+  // Responsive Scaling Logic
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        const padding = 32; // mobile padding
+        const availableWidth = window.innerWidth - padding;
+        const newScale = Math.min(0.62, availableWidth / A4_WIDTH_PX);
+        setScale(newScale);
+      } else {
+        setScale(0.62); // Desktop default
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Pagination Engine Logic
   useEffect(() => {
@@ -80,6 +118,16 @@ const Preview = ({ markdown }) => {
       for (let i = 0; i < atomicElements.length; i++) {
         const entry = atomicElements[i];
         const el = entry.element;
+
+        if (el.classList && el.classList.contains('pagebreak')) {
+           if (currentPage.length > 0) {
+              newPages.push(currentPage);
+              currentPage = [];
+              currentHeight = 0;
+           }
+           continue;
+        }
+
         const style = window.getComputedStyle(el);
         const marginT = parseFloat(style.marginTop || 0);
         const marginB = parseFloat(style.marginBottom || 0);
@@ -92,7 +140,7 @@ const Preview = ({ markdown }) => {
         const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(Tag);
 
         // Refined Heading Glue Logic (60px)
-        const wouldBeAlone = isHeading && (currentHeight + childHeight + 60 > PAGE_CONTENT_LIMIT);
+        const wouldBeAlone = isHeading && (currentHeight + childHeight + 60 > pageContentLimit);
 
         // Add container margins only for the first item of a split group
         if (entry.parentTag && entry.isFirstInParent) {
@@ -104,7 +152,7 @@ const Preview = ({ markdown }) => {
         }
 
         // Atomic break check
-        if ((currentHeight + childHeight > PAGE_CONTENT_LIMIT || wouldBeAlone) && currentPage.length > 0) {
+        if ((currentHeight + childHeight > pageContentLimit || wouldBeAlone) && currentPage.length > 0) {
           newPages.push(currentPage);
           currentPage = [entry];
           currentHeight = childHeight;
@@ -124,7 +172,7 @@ const Preview = ({ markdown }) => {
 
     const timer = setTimeout(paginate, 200);
     return () => clearTimeout(timer);
-  }, [markdown]);
+  }, [markdown, marginPx, pageContentLimit]);
 
   const renderAtomicElements = (atomicEntries) => {
     const rendered = [];
@@ -135,6 +183,23 @@ const Preview = ({ markdown }) => {
       const Tag = el.tagName.toLowerCase();
       const content = { __html: el.innerHTML };
       const className = el.className;
+
+      const attributes = {};
+      Array.from(el.attributes).forEach(attr => {
+        if (attr.name === 'class') {
+          attributes.className = attr.value;
+        } else if (attr.name !== 'style') {
+          // React throws fatal errors if attribute names have invalid characters (like from malformed HTML)
+          if (/^[a-zA-Z_][\w:-]*$/.test(attr.name)) {
+            // Prevent empty src warning loop
+            if (attr.name === 'src' && !attr.value.trim()) {
+               attributes.src = undefined;
+            } else {
+               attributes[attr.name] = attr.value;
+            }
+          }
+        }
+      });
 
       if (entry.parentTag) {
         const ParentTag = entry.parentTag;
@@ -155,7 +220,7 @@ const Preview = ({ markdown }) => {
       } else {
         currentGroup = null;
         if (VOID_ELEMENTS.includes(Tag)) {
-          rendered.push(<Tag key={idx} className={className} />);
+          rendered.push(<Tag key={idx} {...attributes} />);
         } else {
           rendered.push(<Tag key={idx} dangerouslySetInnerHTML={content} className={className} />);
         }
@@ -188,7 +253,7 @@ const Preview = ({ markdown }) => {
         </div>
         <div className="flex items-center gap-2 opacity-50">
           {isPaginating ? <FileText size={12} className="animate-pulse" /> : <Printer size={12} />}
-          <span className="text-[9px] font-black uppercase">Standard A4 • 1" Symmetrical</span>
+          <span className="text-[9px] font-black uppercase">Standard A4</span>
         </div>
       </div>
 
@@ -199,11 +264,11 @@ const Preview = ({ markdown }) => {
         <div
           ref={measurerRef}
           className="prose-document invisible absolute pointer-events-none z-[-1]"
-          style={{ width: `602px`, top: '0', left: '0' }}
+          style={{ width: `${measurerWidth}px`, top: '0', left: '0', color: colorStyle }}
         >
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
+            remarkPlugins={[remarkGfm, remarkBreaks]}
+            rehypePlugins={[rehypeRaw, rehypeHighlight]}
           >
             {markdown}
           </ReactMarkdown>
@@ -219,8 +284,12 @@ const Preview = ({ markdown }) => {
             <div
               key={`export-${pageIdx}`}
               className="export-page w-[794px] h-[1123px] bg-white prose-document flex flex-col relative"
+              style={{ padding: `${marginPx}px`, color: colorStyle }}
             >
-              <div className="flex-1 flex flex-col items-stretch text-left overflow-visible relative page-content">
+              <div 
+                className="flex-1 flex flex-col items-stretch text-left overflow-visible relative page-content"
+                style={{ outline: outlineStyle, outlineOffset: outlineOffset }}
+              >
                 {renderAtomicElements(pageEntries)}
               </div>
 
@@ -235,15 +304,19 @@ const Preview = ({ markdown }) => {
         <div className="w-full h-full flex flex-col items-center">
           <div
             className="origin-top transition-transform duration-500 pb-[400px]"
-            style={{ transform: 'scale(0.62)', width: `${A4_WIDTH_PX}px` }}
+            style={{ transform: `scale(${scale})`, width: `${A4_WIDTH_PX}px` }}
           >
             {pages.length > 0 ? (
               pages.map((pageEntries, pageIdx) => (
                 <div
                   key={pageIdx}
                   className="document-page relative w-[794px] h-[1123px] bg-white shadow-2xl prose-document overflow-hidden ring-1 ring-black/5 rounded-sm flex flex-col mb-12"
+                  style={{ padding: `${marginPx}px`, color: colorStyle }}
                 >
-                  <div className="flex-1 flex flex-col items-stretch text-left overflow-visible relative page-content">
+                  <div 
+                    className="flex-1 flex flex-col items-stretch text-left overflow-visible relative page-content"
+                    style={{ outline: outlineStyle, outlineOffset: outlineOffset }}
+                  >
                     {renderAtomicElements(pageEntries)}
                   </div>
 
