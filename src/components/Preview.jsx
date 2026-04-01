@@ -58,121 +58,142 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
   }, []);
 
   // Pagination Engine Logic
-  useEffect(() => {
-    if (!markdown) {
-      setPages([]);
+  const timerRef = useRef(null);
+
+  const paginate = () => {
+    setIsPaginating(true);
+    const parent = measurerRef.current;
+    if (!parent) return;
+
+    let children = parent.children;
+    // Unbox ReactMarkdown wrapper if present
+    if (children.length === 1 && children[0].tagName.toLowerCase() === 'div' && children[0].children.length > 0) {
+      children = children[0].children;
+    }
+
+    if (!children || children.length === 0) {
+      setIsPaginating(false);
       return;
     }
 
-    const paginate = () => {
-      setIsPaginating(true);
-      const parent = measurerRef.current;
-      const children = parent.children;
-      if (!children || children.length === 0) {
-        setIsPaginating(false);
-        return;
-      }
+    const atomicElements = [];
 
-      const atomicElements = [];
+    // Decompose nested structures into atomic units
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const tag = child.tagName.toLowerCase();
 
-      // Decompose nested structures into atomic units
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        const tag = child.tagName.toLowerCase();
-
-        if (['ul', 'ol', 'blockquote'].includes(tag)) {
-          const innerChildren = child.children;
-          for (let j = 0; j < innerChildren.length; j++) {
-            const inner = innerChildren[j];
-            atomicElements.push({
-              element: inner,
-              parentTag: tag,
-              isFirstInParent: j === 0,
-              isLastInParent: j === innerChildren.length - 1
-            });
-          }
-        } else if (tag === 'table') {
-          // Flatten table rows
-          const rows = child.querySelectorAll('tr');
-          rows.forEach((row, idx) => {
-            atomicElements.push({
-              element: row,
-              parentTag: 'table',
-              isFirstInParent: idx === 0,
-              isLastInParent: idx === rows.length - 1,
-              isHeaderRow: row.parentElement?.tagName.toLowerCase() === 'thead'
-            });
-          });
-        } else {
+      if (['ul', 'ol', 'blockquote'].includes(tag)) {
+        const innerChildren = child.children;
+        for (let j = 0; j < innerChildren.length; j++) {
+          const inner = innerChildren[j];
           atomicElements.push({
-            element: child,
-            parentTag: null
+            element: inner,
+            parentTag: tag,
+            isFirstInParent: j === 0,
+            isLastInParent: j === innerChildren.length - 1
           });
         }
+      } else if (tag === 'table') {
+        // Flatten table rows
+        const rows = child.querySelectorAll('tr');
+        rows.forEach((row, idx) => {
+          atomicElements.push({
+            element: row,
+            parentTag: 'table',
+            isFirstInParent: idx === 0,
+            isLastInParent: idx === rows.length - 1,
+            isHeaderRow: row.parentElement?.tagName.toLowerCase() === 'thead'
+          });
+        });
+      } else {
+        atomicElements.push({
+          element: child,
+          parentTag: null
+        });
+      }
+    }
+
+    const newPages = [];
+    let currentPage = [];
+    let currentHeight = 0;
+
+    for (let i = 0; i < atomicElements.length; i++) {
+      const entry = atomicElements[i];
+      const el = entry.element;
+
+      if (el.classList && el.classList.contains('pagebreak')) {
+         if (currentPage.length > 0) {
+            newPages.push(currentPage);
+            currentPage = [];
+            currentHeight = 0;
+         }
+         continue;
       }
 
-      const newPages = [];
-      let currentPage = [];
-      let currentHeight = 0;
+      const style = window.getComputedStyle(el);
+      const marginT = parseFloat(style.marginTop || 0);
+      const marginB = parseFloat(style.marginBottom || 0);
 
-      for (let i = 0; i < atomicElements.length; i++) {
-        const entry = atomicElements[i];
-        const el = entry.element;
+      // Precise Top Alignment (v3.2): Reset margin-top for the first element on each page
+      const effectiveMarginT = currentHeight === 0 ? 0 : marginT;
+      let childHeight = el.offsetHeight + effectiveMarginT + marginB;
 
-        if (el.classList && el.classList.contains('pagebreak')) {
-           if (currentPage.length > 0) {
-              newPages.push(currentPage);
-              currentPage = [];
-              currentHeight = 0;
-           }
-           continue;
-        }
+      const Tag = el.tagName.toLowerCase();
+      const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(Tag);
 
-        const style = window.getComputedStyle(el);
-        const marginT = parseFloat(style.marginTop || 0);
-        const marginB = parseFloat(style.marginBottom || 0);
+      // Refined Heading Glue Logic (60px)
+      const wouldBeAlone = isHeading && (currentHeight + childHeight + 60 > pageContentLimit);
 
-        // Precise Top Alignment (v3.2): Reset margin-top for the first element on each page
-        const effectiveMarginT = currentHeight === 0 ? 0 : marginT;
-        let childHeight = el.offsetHeight + effectiveMarginT + marginB;
-
-        const Tag = el.tagName.toLowerCase();
-        const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(Tag);
-
-        // Refined Heading Glue Logic (60px)
-        const wouldBeAlone = isHeading && (currentHeight + childHeight + 60 > pageContentLimit);
-
-        // Add container margins only for the first item of a split group
-        if (entry.parentTag && entry.isFirstInParent) {
-          const parentEl = el.closest(entry.parentTag);
-          if (parentEl) {
-            const parentStyle = window.getComputedStyle(parentEl);
-            childHeight += parseFloat(parentStyle.marginTop || 0);
-          }
-        }
-
-        // Atomic break check
-        if ((currentHeight + childHeight > pageContentLimit || wouldBeAlone) && currentPage.length > 0) {
-          newPages.push(currentPage);
-          currentPage = [entry];
-          currentHeight = childHeight;
-        } else {
-          currentPage.push(entry);
-          currentHeight += childHeight;
+      // Add container margins only for the first item of a split group
+      if (entry.parentTag && entry.isFirstInParent) {
+        const parentEl = el.closest(entry.parentTag);
+        if (parentEl) {
+          const parentStyle = window.getComputedStyle(parentEl);
+          childHeight += parseFloat(parentStyle.marginTop || 0);
         }
       }
 
-      if (currentPage.length > 0) {
+      // Atomic break check
+      if ((currentHeight + childHeight > pageContentLimit || wouldBeAlone) && currentPage.length > 0) {
         newPages.push(currentPage);
+        currentPage = [entry];
+        currentHeight = childHeight;
+      } else {
+        currentPage.push(entry);
+        currentHeight += childHeight;
       }
+    }
 
-      setPages(newPages);
-      setIsPaginating(false);
-    };
+    if (currentPage.length > 0) {
+      newPages.push(currentPage);
+    }
 
-    const timer = setTimeout(paginate, 200);
-    return () => clearTimeout(timer);
-  }, [markdown, marginPx, pageContentLimit]);
+    setPages(newPages);
+    setIsPaginating(false);
+  };
+
+  // Trigger pagination on data change OR content growth (images loading)
+  useEffect(() => {
+    const measurer = measurerRef.current;
+    if (!measurer) return;
+
+    // Monitor for size changes (handles image loads, font swaps)
+    const resizeObserver = new ResizeObserver(() => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(paginate, 150);
+    });
+
+    resizeObserver.observe(measurer);
+    
+    // Initial trigger
+    paginate();
+
+    return () => {
+      resizeObserver.disconnect();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    }
+  }, [markdown, pageContentLimit]);
 
   const renderAtomicElements = (atomicEntries) => {
     const rendered = [];
