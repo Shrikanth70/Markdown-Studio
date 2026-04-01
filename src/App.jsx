@@ -47,7 +47,7 @@ const App = () => {
   };
 
   return (
-    <div className="w-screen transition-colors duration-300 bg-[#E5E5E5] overflow-hidden" style={{ height: '100dvh', maxHeight: '-webkit-fill-available' }}>
+    <div className="h-screen w-screen transition-colors duration-300 bg-[#E5E5E5]">
       {/* Main Container - Full Screen 100% Layout */}
       <div className="w-full h-full overflow-hidden flex flex-col transition-all duration-300 bg-white">
 
@@ -79,7 +79,7 @@ const App = () => {
         )}
 
         {/* Main Section */}
-        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden border-t border-lightGray">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden border-t border-lightGray">
           {view === 'editor' ? (
             <>
               {/* LEFT - Editor */}
