@@ -347,7 +347,8 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Preview;

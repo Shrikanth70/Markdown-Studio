@@ -6,7 +6,7 @@ import Actions from './components/Actions';
 import { Info, FileText, CheckCircle } from 'lucide-react';
 
 const App = () => {
-  const [markdown, setMarkdown] = useState('# Markdown Studio\n\nWelcome to **Markdown Studio**! \n\n### Features:\n- Live Preview\n- PDF Export\n- Clean 16:9 UI\n\n```javascript\nconsole.log("Happy Coding!");\n```\n\n| Item | Status |\n|------|--------|\n| Build | Done ✅ |\n| Style | B&W 🖤 |\n\nEnjoy using this tool!');
+  const [markdown, setMarkdown] = useState('# Markdown Studio\n\nWelcome to **Markdown Studio**! \n\n![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)\n![Tech](https://img.shields.io/badge/Built%20With-Markdown-blue?style=for-the-badge)\n![AI](https://img.shields.io/badge/AI-Future-purple?style=for-the-badge)\n\n### Features:\n- Live Preview\n- PDF Export\n- Clean 16:9 UI\n\n```javascript\nconsole.log("Happy Coding!");\n```\n\n| Item | Status |\n|------|--------|\n| Build | Done ✅ |\n| Style | B&W 🖤 |\n\nEnjoy using this tool!');
 
   const [view, setView] = useState('editor'); // 'editor' | 'about'
   const [editorMode, setEditorMode] = useState('text'); // 'text' | 'upload'
@@ -24,7 +24,7 @@ const App = () => {
 
   const handleLoadSample = () => {
     if (!markdown.trim()) {
-      setMarkdown('# Sample Document\n\n## Introduction\nMarkdown is a lightweight markup language that allows you to format text using simple syntax.\n\n### List Example:\n1. First item\n2. Second item\n3. Third item\n\n### Table Example:\n| Name | Role | Location |\n| :--- | :--- | :--- |\n| Alice | Designer | New York |\n| Bob | Developer | London |\n| Carol | Manager | Tokyo |\n\n### Code Block:\n```python\ndef hello_world():\n    print("Hello from Markdown Studio!")\n```\n\n> "Simplicity is the ultimate sophistication." - Leonardo da Vinci\n\n[Link to Google](https://google.com)\n\n![Placeholder Image](https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=500&auto=format&fit=crop)');
+      setMarkdown('# Sample Document\n\n![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)\n![Tech](https://img.shields.io/badge/Built%20With-Markdown-blue?style=for-the-badge)\n![AI](https://img.shields.io/badge/AI-Future-purple?style=for-the-badge)\n\n## Introduction\nMarkdown is a lightweight markup language that allows you to format text using simple syntax.\n\n### List Example:\n1. First item\n2. Second item\n3. Third item\n\n### Table Example:\n| Name | Role | Location |\n| :--- | :--- | :--- |\n| Alice | Designer | New York |\n| Bob | Developer | London |\n| Carol | Manager | Tokyo |\n\n### Code Block:\n```python\ndef hello_world():\n    print("Hello from Markdown Studio!")\n```\n\n> "Simplicity is the ultimate sophistication." - Leonardo da Vinci\n\n[Link to Google](https://google.com)\n\n![Placeholder Image](https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=500&auto=format&fit=crop)');
     } else {
       setMarkdown(prev => prev + ' ');
       setTimeout(() => setMarkdown(prev => prev.slice(0, -1)), 0);
