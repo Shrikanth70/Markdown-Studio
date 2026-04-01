@@ -91,8 +91,6 @@ const Editor = ({
     }
   };
 
-
-
   const wrapSelection = (prefix, suffix = '') => {
     if (!textareaRef.current) return;
     const { start, end } = selectionTracker.current;
@@ -206,9 +204,48 @@ const Editor = ({
         </div>
       </div>
 
-      {/* Secondary Tools Header (Mobile-Friendly Formatting) */}
+      {/* Editor Content Area */}
+      <div className="flex-1 flex flex-col p-2 md:p-4 w-full relative">
+        {mode === 'text' ? (
+          <textarea
+            ref={textareaRef}
+            value={markdown}
+            onChange={(e) => { setMarkdown(e.target.value); updateSelection(); }}
+            onSelect={updateSelection}
+            onKeyUp={updateSelection}
+            onMouseUp={updateSelection}
+            placeholder="Paste your markdown here... (Highlight text to format using bottom bar)"
+            className="flex-1 w-full h-full resize-none focus:outline-none leading-relaxed transition-colors duration-300 bg-white text-darkGray absolute inset-0 p-4 md:p-6 pb-12"
+            style={{ 
+              fontSize: fontSize, 
+              fontFamily: fontFamily === 'monospace' ? '"JetBrains Mono", monospace' : fontFamily 
+            }}
+            spellCheck="false"
+          />
+        ) : (
+          <div 
+            onClick={() => fileInputRef.current.click()}
+            className="flex-1 flex flex-col items-center justify-center m-4 border-2 border-dashed rounded-3xl cursor-pointer transition-all hover:scale-[0.99] group border-lightGray bg-white hover:bg-lightGray/10 h-full"
+          >
+            <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-110 bg-lightGray/20 text-mediumGray">
+              <UploadCloud size={32} />
+            </div>
+            <h3 className="text-lg font-bold mb-1 text-primary">Import Document</h3>
+            <p className="text-xs opacity-50 uppercase font-black tracking-widest">Select or Drag .md file</p>
+          </div>
+        )}
+      </div>
+
+      {/* Floating Indicator */}
       {mode === 'text' && (
-        <div className="h-10 border-b px-2 md:px-4 flex items-center font-semibold text-[9px] uppercase tracking-widest bg-[#F9F9F9] border-lightGray text-darkGray overflow-x-auto no-scrollbar whitespace-nowrap shrink-0">
+        <div className="absolute right-6 top-16 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-full border border-mediumGray bg-lightGray text-darkGray opacity-40 transition-all select-none pointer-events-none hidden md:block">
+          UTF-8 • MD
+        </div>
+      )}
+
+      {/* Secondary Tools Header (Moved to bottom immediately above Actions Bar for Mobile ergonomiics) */}
+      {mode === 'text' && (
+        <div className="h-10 border-t px-2 md:px-4 flex items-center font-semibold text-[9px] uppercase tracking-widest bg-[#F9F9F9] border-lightGray text-darkGray overflow-x-auto no-scrollbar whitespace-nowrap shrink-0">
           
           {/* Text Style Ribbon */}
           <div className="flex items-center gap-2 md:gap-3 border-r border-lightGray pr-2 md:pr-4 shrink-0">
@@ -261,45 +298,6 @@ const Editor = ({
               <span className="inline md:hidden">Web</span>
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Editor Content Area */}
-      <div className="flex-1 flex flex-col p-2 md:p-4 w-full relative">
-        {mode === 'text' ? (
-          <textarea
-            ref={textareaRef}
-            value={markdown}
-            onChange={(e) => { setMarkdown(e.target.value); updateSelection(); }}
-            onSelect={updateSelection}
-            onKeyUp={updateSelection}
-            onMouseUp={updateSelection}
-            placeholder="Paste your markdown here... (Highlight text to format using top bar)"
-            className="flex-1 w-full h-full resize-none focus:outline-none leading-relaxed transition-colors duration-300 bg-white text-darkGray absolute inset-0 p-4 md:p-6"
-            style={{ 
-              fontSize: fontSize, 
-              fontFamily: fontFamily === 'monospace' ? '"JetBrains Mono", monospace' : fontFamily 
-            }}
-            spellCheck="false"
-          />
-        ) : (
-          <div 
-            onClick={() => fileInputRef.current.click()}
-            className="flex-1 flex flex-col items-center justify-center m-4 border-2 border-dashed rounded-3xl cursor-pointer transition-all hover:scale-[0.99] group border-lightGray bg-white hover:bg-lightGray/10 h-full"
-          >
-            <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-110 bg-lightGray/20 text-mediumGray">
-              <UploadCloud size={32} />
-            </div>
-            <h3 className="text-lg font-bold mb-1 text-primary">Import Document</h3>
-            <p className="text-xs opacity-50 uppercase font-black tracking-widest">Select or Drag .md file</p>
-          </div>
-        )}
-      </div>
-      
-      {/* Floating Indicator */}
-      {mode === 'text' && (
-        <div className="absolute right-6 bottom-6 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-full border border-mediumGray bg-lightGray text-darkGray opacity-40 transition-all select-none pointer-events-none hidden md:block">
-          UTF-8 • MD
         </div>
       )}
     </div>
