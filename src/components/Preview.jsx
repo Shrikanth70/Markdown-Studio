@@ -302,17 +302,25 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
 
         {/* PAGINATED PAGES (Preview) */}
         <div className="w-full flex-1 flex flex-col items-center pb-24">
-          <div
-            className="origin-top transition-all duration-500"
+          
+          {/* Strict Dimension Wrapper to guarantee exact layout size without negative margin tricks */}
+          <div 
+            className="relative" 
             style={{ 
-              transform: `scale(${scale})`, 
-              width: `${A4_WIDTH_PX}px`,
-              height: `${(pages.length > 0 ? pages.length * 1123 + (pages.length * 48) : 1123)}px`,
-              marginBottom: `-${(pages.length > 0 ? pages.length * 1123 + (pages.length * 48) : 1123) * (1 - scale)}px`
+              width: `${A4_WIDTH_PX * scale}px`, 
+              height: `${(pages.length > 0 ? (pages.length * 1123) + (pages.length * 48) : 1123) * scale}px` 
             }}
           >
-            {pages.length > 0 ? (
-              pages.map((pageEntries, pageIdx) => (
+            {/* Absolute Scaled Content - Never clips because it fits exactly inside the wrapper */}
+            <div
+              className="absolute top-0 left-0 origin-top-left transition-all duration-500 flex flex-col items-center"
+              style={{ 
+                transform: `scale(${scale})`, 
+                width: `${A4_WIDTH_PX}px`
+              }}
+            >
+              {pages.length > 0 ? (
+                pages.map((pageEntries, pageIdx) => (
                 <div
                   key={pageIdx}
                   className="document-page relative w-[794px] h-[1123px] bg-white shadow-2xl prose-document overflow-hidden ring-1 ring-black/5 rounded-sm flex flex-col mb-12"
