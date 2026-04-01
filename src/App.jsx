@@ -47,7 +47,7 @@ const App = () => {
   };
 
   return (
-    <div className="w-screen transition-colors duration-300 bg-[#E5E5E5] overflow-hidden" style={{ height: '100dvh', maxHeight: '-webkit-fill-available' }}>
+    <div className="fixed inset-0 transition-colors duration-300 bg-[#E5E5E5] overflow-hidden">
       {/* Main Container - Full Screen 100% Layout */}
       <div className="w-full h-full overflow-hidden flex flex-col transition-all duration-300 bg-white">
 
@@ -83,7 +83,7 @@ const App = () => {
           {view === 'editor' ? (
             <>
               {/* LEFT - Editor */}
-              <div className={`w-full md:w-1/2 h-full md:border-r flex flex-col transition-colors duration-300 bg-white border-lightGray ${mobileTab === 'editor' ? 'flex' : 'hidden md:flex'}`}>
+              <div className={`flex-1 w-full md:w-1/2 min-h-0 md:border-r flex flex-col transition-colors duration-300 bg-white border-lightGray ${mobileTab === 'editor' ? 'flex' : 'hidden md:flex'}`}>
                 <Editor
                   markdown={markdown}
                   setMarkdown={setMarkdown}
@@ -101,7 +101,7 @@ const App = () => {
               </div>
 
               {/* RIGHT - Preview */}
-              <div className={`w-full md:w-1/2 h-full flex flex-col transition-colors duration-300 bg-[#F9F9F9] ${mobileTab === 'preview' ? 'flex' : 'hidden md:flex'}`}>
+              <div className={`flex-1 w-full md:w-1/2 min-h-0 flex flex-col transition-colors duration-300 bg-[#F9F9F9] ${mobileTab === 'preview' ? 'flex' : 'hidden md:flex'}`}>
                 <Preview
                   markdown={markdown}
                   fontSize={fontSize}
