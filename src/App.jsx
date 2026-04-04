@@ -60,19 +60,19 @@ const App = () => {
 
         {/* Mobile Tab Switcher - Only visible on small screens when in editor view */}
         {view === 'editor' && (
-          <div className="md:hidden flex border-b bg-[#F9F9F9] border-lightGray">
+          <div className="md:hidden flex bg-white border-b border-lightGray shadow-sm shrink-0">
             <button 
               onClick={() => setMobileTab('editor')}
-              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${mobileTab === 'editor' ? 'bg-white text-primary border-b-2 border-primary' : 'text-mediumGray opacity-60'}`}
+              className={`flex-1 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2.5 ${mobileTab === 'editor' ? 'text-primary border-b-2 border-primary bg-lightGray/5' : 'text-mediumGray opacity-50'}`}
             >
-              <FileText size={14} />
+              <FileText size={16} />
               Editor
             </button>
             <button 
               onClick={() => setMobileTab('preview')}
-              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${mobileTab === 'preview' ? 'bg-white text-primary border-b-2 border-primary' : 'text-mediumGray opacity-60'}`}
+              className={`flex-1 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2.5 ${mobileTab === 'preview' ? 'text-primary border-b-2 border-primary bg-lightGray/5' : 'text-mediumGray opacity-50'}`}
             >
-              <CheckCircle size={14} />
+              <CheckCircle size={16} />
               Preview
             </button>
           </div>
@@ -101,7 +101,7 @@ const App = () => {
               </div>
 
               {/* RIGHT - Preview */}
-              <div className={`flex-1 w-full md:w-1/2 min-h-0 flex flex-col transition-colors duration-300 bg-[#F9F9F9] ${mobileTab === 'preview' ? 'flex' : 'hidden md:flex'}`}>
+              <div className={`flex-1 w-full md:w-1/2 min-h-0 flex flex-col transition-colors duration-300 bg-[#333333] ${mobileTab === 'preview' ? 'flex' : 'hidden md:flex'}`}>
                 <Preview
                   markdown={markdown}
                   fontSize={fontSize}

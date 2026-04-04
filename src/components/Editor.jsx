@@ -154,7 +154,7 @@ const Editor = ({
       <div className="h-10 border-b px-2 md:px-4 flex items-center justify-between font-semibold text-[10px] uppercase tracking-widest shadow-sm border-lightGray bg-white text-darkGray shrink-0 overflow-x-auto no-scrollbar whitespace-nowrap">
         <div className="flex items-center gap-2 shrink-0 border-r border-lightGray pr-3 md:pr-4">
           <Edit3 size={14} className="text-primary" />
-          <span className="hidden sm:inline">Editor {mode === 'upload' ? '(Docs)' : ''}</span>
+          <span className="hidden xs:inline">Editor {mode === 'upload' ? '(Docs)' : ''}</span>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 shrink-0 ml-auto md:ml-0 md:mr-auto pl-2">
@@ -215,7 +215,7 @@ const Editor = ({
             onKeyUp={updateSelection}
             onMouseUp={updateSelection}
             placeholder="Paste your markdown here... (Highlight text to format using bottom bar)"
-            className="flex-1 w-full resize-none focus:outline-none leading-relaxed transition-colors duration-300 bg-white text-darkGray p-4 md:p-6 overflow-y-auto min-h-0"
+            className="flex-1 w-full resize-none focus:outline-none leading-relaxed transition-colors duration-300 bg-white text-darkGray p-4 md:p-8 overflow-y-auto min-h-0"
             style={{ 
               fontSize: fontSize, 
               fontFamily: fontFamily === 'monospace' ? '"JetBrains Mono", monospace' : fontFamily 
@@ -248,11 +248,11 @@ const Editor = ({
         <div className="h-10 border-t px-2 md:px-4 flex items-center font-semibold text-[9px] uppercase tracking-widest bg-[#F9F9F9] border-lightGray text-darkGray overflow-x-auto no-scrollbar whitespace-nowrap shrink-0 z-10 w-full shadow-[0px_-2px_10px_rgba(0,0,0,0.02)]">
           
           {/* Text Style Ribbon */}
-          <div className="flex items-center gap-2 md:gap-3 border-r border-lightGray pr-2 md:pr-4 shrink-0">
-            <button onClick={() => handleFormatText('bold')} className="flex items-center justify-center p-1 rounded hover:bg-lightGray/50 border border-transparent hover:border-lightGray transition-colors" title="Bold">
+          <div className="flex items-center gap-2 md:gap-4 border-r border-lightGray pr-2 md:pr-4 shrink-0">
+            <button onClick={() => handleFormatText('bold')} className="flex items-center justify-center p-1.5 rounded hover:bg-lightGray/50 border border-transparent hover:border-lightGray transition-colors" title="Bold">
               <Bold size={14} className="text-primary"/>
             </button>
-            <button onClick={() => handleFormatText('italic')} className="flex items-center justify-center p-1 rounded hover:bg-lightGray/50 border border-transparent hover:border-lightGray transition-colors" title="Italic">
+            <button onClick={() => handleFormatText('italic')} className="flex items-center justify-center p-1.5 rounded hover:bg-lightGray/50 border border-transparent hover:border-lightGray transition-colors" title="Italic">
               <Italic size={14} className="text-primary"/>
             </button>
             <button onClick={handlePageBreak} className="flex items-center justify-center p-1 rounded hover:bg-lightGray/50 border border-transparent hover:border-lightGray transition-colors" title="Insert Page Break">
@@ -262,8 +262,8 @@ const Editor = ({
               <CornerDownLeft size={14} className="text-primary"/>
             </button>
             <div className="flex items-center gap-1 pl-1 md:pl-2 shrink-0">
-               <span className="text-mediumGray hidden md:inline">Font:</span>
-               <select onChange={e => { handleFormatText('font', e.target.value); e.target.value=''; }} defaultValue="" className="bg-transparent border-none outline-none font-bold cursor-pointer hover:text-primary min-w-[60px]">
+               <span className="text-mediumGray hidden sm:inline">Font:</span>
+               <select onChange={e => { handleFormatText('font', e.target.value); e.target.value=''; }} defaultValue="" className="bg-transparent border-none outline-none font-bold cursor-pointer hover:text-primary min-w-[70px]">
                  <option value="" disabled>Custom Style...</option>
                  <option value="Arial">Arial</option>
                  <option value="Times New Roman">Times New Roman</option>

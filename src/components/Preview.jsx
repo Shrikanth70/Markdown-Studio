@@ -43,14 +43,23 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
   // Responsive Scaling Logic
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        const padding = 32; // mobile padding
-        const availableWidth = window.innerWidth - padding;
-        const newScale = Math.min(0.62, availableWidth / A4_WIDTH_PX);
-        setScale(newScale);
+      const parentWidth = window.innerWidth;
+      const padding = parentWidth < 768 ? 24 : 80;
+      const availableWidth = parentWidth - padding;
+      
+      // Calculate scale to fit the A4 width within available space
+      // On desktop, we want a comfortable view (at most 0.8 scale to show context)
+      // On mobile, we scale to fit precisely
+      let newScale;
+      if (parentWidth < 768) {
+        newScale = Math.min(0.65, availableWidth / A4_WIDTH_PX);
+      } else if (parentWidth < 1200) {
+        newScale = Math.min(0.75, (availableWidth * 0.9) / A4_WIDTH_PX);
       } else {
-        setScale(0.62); // Desktop default
+        newScale = 0.85; // Large desktop default
       }
+      
+      setScale(Math.max(0.2, newScale)); // Never scale below 0.2
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -132,6 +141,7 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
          continue;
       }
 
+      const Tag = el.tagName.toLowerCase();
       const style = window.getComputedStyle(el);
       const marginT = parseFloat(style.marginTop || 0);
       const marginB = parseFloat(style.marginBottom || 0);
@@ -151,7 +161,6 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
       childHeight = Math.min(childHeight, pageContentLimit);
       childHeight += effectiveMarginT + marginB;
 
-      const Tag = el.tagName.toLowerCase();
       const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(Tag);
 
       // Refined Heading Glue Logic (60px)
