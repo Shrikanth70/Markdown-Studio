@@ -72,6 +72,7 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
     }
 
     if (!children || children.length === 0) {
+      setPages([]);
       setIsPaginating(false);
       return;
     }
@@ -137,7 +138,18 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
 
       // Precise Top Alignment (v3.2): Reset margin-top for the first element on each page
       const effectiveMarginT = currentHeight === 0 ? 0 : marginT;
-      let childHeight = el.offsetHeight + effectiveMarginT + marginB;
+      
+      // Fallback height for elements that aren't yet fully laid out or have collapsed heights
+      let childHeight = el.offsetHeight;
+      if (childHeight === 0 && (el.innerText.trim().length > 0 || Tag === 'img')) {
+        // Approximate height based on content or image placeholder if offsetHeight is zero but content exists
+        childHeight = Tag === 'img' ? 300 : 24; 
+      }
+      
+      // If a single atomic block is taller than the page, it will be clipped anyway.
+      // We cap it here to ensure the engine doesn't break the layout by looking at overflow heights.
+      childHeight = Math.min(childHeight, pageContentLimit);
+      childHeight += effectiveMarginT + marginB;
 
       const Tag = el.tagName.toLowerCase();
       const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(Tag);
@@ -209,29 +221,47 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
       Array.from(el.attributes).forEach(attr => {
         if (attr.name === 'class') {
           attributes.className = attr.value;
-        } else if (attr.name !== 'style') {
-          // React throws fatal errors if attribute names have invalid characters (like from malformed HTML)
-          if (/^[a-zA-Z_][\w:-]*$/.test(attr.name)) {
-            // Prevent empty src warning loop
-            if (attr.name === 'src' && !attr.value.trim()) {
-               attributes.src = undefined;
-            } else {
-               attributes[attr.name] = attr.value;
+          } else if (attr.name === 'style') {
+             // More robust style parsing for React
+             const styleStr = attr.value;
+             if (styleStr) {
+               const style = {};
+               styleStr.split(';').forEach(pair => {
+                 const firstColonIndex = pair.indexOf(':');
+                 if (firstColonIndex !== -1) {
+                    const key = pair.substring(0, firstColonIndex).trim();
+                    const val = pair.substring(firstColonIndex + 1).trim();
+                    const reactKey = key.replace(/-([a-z])/g, g => g[1].toUpperCase());
+                    style[reactKey] = val;
+                 }
+               });
+               attributes.style = style;
+             }
+          } else {
+            // React throws fatal errors if attribute names have invalid characters (like from malformed HTML)
+            if (/^[a-zA-Z_][\w:-]*$/.test(attr.name)) {
+              // Prevent empty src warning loop
+              if (attr.name === 'src' && !attr.value.trim()) {
+                 attributes.src = undefined;
+              } else {
+                 attributes[attr.name] = attr.value;
+              }
             }
           }
-        }
-      });
+        });
 
       if (entry.parentTag) {
         const ParentTag = entry.parentTag;
         if (!currentGroup || currentGroup.tag !== ParentTag) {
-          currentGroup = { tag: ParentTag, items: [] };
+          currentGroup = ParentTag === 'table' ? { tag: ParentTag, headers: [], bodies: [] } : { tag: ParentTag, items: [] };
           rendered.push(currentGroup);
         }
 
         if (ParentTag === 'table') {
-          currentGroup.items.push(
-            <tr key={idx} dangerouslySetInnerHTML={content} className={className} />
+          const isHeader = entry.isHeaderRow;
+          const target = isHeader ? currentGroup.headers : currentGroup.bodies;
+          target.push(
+            <tr key={`tr-${idx}`} dangerouslySetInnerHTML={content} className={className} />
           );
         } else {
           currentGroup.items.push(
@@ -243,7 +273,7 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
         if (VOID_ELEMENTS.includes(Tag)) {
           rendered.push(<Tag key={idx} {...attributes} />);
         } else {
-          rendered.push(<Tag key={idx} dangerouslySetInnerHTML={content} className={className} />);
+          rendered.push(<Tag key={idx} {...attributes} dangerouslySetInnerHTML={content} />);
         }
       }
     });
@@ -253,9 +283,12 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
         const Container = node.tag;
         if (Container === 'table') {
           return (
-            <table key={i}>
-              <tbody>{node.items}</tbody>
-            </table>
+            <div key={i} className="w-full overflow-x-auto no-scrollbar my-6 border border-lightGray/20 rounded-sm">
+              <table className="!my-0">
+                {node.headers.length > 0 && <thead>{node.headers}</thead>}
+                {node.bodies.length > 0 && <tbody>{node.bodies}</tbody>}
+              </table>
+            </div>
           );
         }
         return <Container key={i}>{node.items}</Container>;
@@ -284,8 +317,8 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
         {/* HIDDEN MEASURER - Modified to ensure node visibility during measurement */}
         <div
           ref={measurerRef}
-          className="prose-document invisible absolute pointer-events-none z-[-1]"
-          style={{ width: `${measurerWidth}px`, top: '0', left: '0', color: colorStyle }}
+          className="prose-document absolute pointer-events-none z-[-1] opacity-0"
+          style={{ width: `${measurerWidth}px`, top: '0', left: '0', color: colorStyle, visibility: 'visible' }}
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkBreaks]}
@@ -304,11 +337,29 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
           {pages.map((pageEntries, pageIdx) => (
             <div
               key={`export-${pageIdx}`}
-              className="export-page w-[794px] h-[1123px] bg-white prose-document flex flex-col relative"
+              className="export-page w-[794px] h-[1123px] bg-white prose-document"
               style={{ padding: `${marginPx}px`, color: colorStyle }}
             >
+              <style>{`
+                .export-page img {
+                  .prose-document * {
+                    max-width: 100%;
+                    overflow-wrap: break-word !important;
+                    text-wrap: pretty;
+                  }
+
+                  [align="center"] { text-align: center !important; }
+                  [align="right"] { text-align: right !important; }
+                  [align="left"] { text-align: left !important; }
+                  object-fit: contain;
+                  height: auto;
+                  border-radius: 2px;
+                  margin: 1.5em auto;
+                  display: block;
+                }
+              `}</style>
               <div 
-                className="flex-1 flex flex-col items-stretch text-left overflow-visible relative page-content"
+                className="flex-1 flex flex-col items-stretch overflow-visible relative page-content"
                 style={{ outline: outlineStyle, outlineOffset: outlineOffset }}
               >
                 {renderAtomicElements(pageEntries)}
@@ -344,11 +395,11 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
                 pages.map((pageEntries, pageIdx) => (
                 <div
                   key={pageIdx}
-                  className="document-page relative w-[794px] h-[1123px] bg-white shadow-2xl prose-document overflow-hidden ring-1 ring-black/5 rounded-sm flex flex-col mb-12"
+                  className="document-page relative w-[794px] h-[1123px] bg-white shadow-2xl ring-1 ring-black/5 rounded-sm flex flex-col mb-12"
                   style={{ padding: `${marginPx}px`, color: colorStyle }}
                 >
                   <div 
-                    className="flex-1 flex flex-col items-stretch text-left overflow-visible relative page-content"
+                    className="flex-1 flex flex-col items-stretch overflow-visible relative page-content prose-document"
                     style={{ outline: outlineStyle, outlineOffset: outlineOffset }}
                   >
                     {renderAtomicElements(pageEntries)}

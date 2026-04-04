@@ -94,13 +94,18 @@ body {
   box-sizing: border-box;
   word-wrap: break-word !important;
   word-break: normal !important;
-  overflow-wrap: anywhere !important;
+  overflow-wrap: break-word !important;
 }
 
 .prose-document * {
   max-width: 100%;
-  overflow-wrap: anywhere !important;
+  overflow-wrap: break-word !important;
+  text-wrap: pretty;
 }
+
+[align="center"] { text-align: center !important; }
+[align="right"] { text-align: right !important; }
+[align="left"] { text-align: left !important; }
 
 /* DOCUMENT PAGE COMPONENT (Live Preview Only) */
 .document-page {
@@ -249,8 +254,12 @@ body {
 .prose-document th,
 .prose-document td {
   border: 1px solid #E5E5E5;
-  padding: 0.6em;
+  padding: 0.8em;
   text-align: left;
+  min-width: 90px;
+  max-width: 300px;
+  overflow-wrap: break-word;
+  font-size: 9.5pt !important;
 }
 
 .prose-document th {
@@ -266,6 +275,8 @@ body {
 
 .prose-document img {
   max-width: 100%;
+  max-height: 931px;
+  object-fit: contain;
   height: auto;
   border-radius: 2px;
   margin: 1.5em auto;
