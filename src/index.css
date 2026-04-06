@@ -115,11 +115,10 @@ body {
   background-color: #ffffff;
   box-shadow: 0 10px 50px rgba(0, 0, 0, 0.4);
   margin-bottom: 3rem;
-  padding: 2.54cm !important;
-  /* Standard 'Normal' 2.54cm margins */
+  padding: 2.54cm !important; /* Strict 1-inch margins */
   flex-shrink: 0;
   border-radius: 2px;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   transition: box-shadow 0.3s ease;
 }
 
@@ -135,12 +134,19 @@ body {
   display: block !important;
   width: 794px !important;
   height: 1123px !important;
-  background: #ffffff !important;
+  background-color: white !important;
   margin: 0 !important;
-  padding: 2.54cm !important;
-  position: relative !important;
-  box-shadow: none !important;
+  box-sizing: border-box !important;
   overflow: hidden !important;
+  position: relative !important;
+  padding: 15mm !important;
+  box-shadow: none !important;
+}
+
+.export-section {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  width: 100%;
   box-sizing: border-box !important;
 }
 
@@ -300,4 +306,35 @@ body {
   margin: 1.5em 0;
   width: 100% !important;
   box-sizing: border-box !important;
+}
+
+/* PREVENT SCALED-RENDER ARTIFACTS DURING EXPORT (v3.5) */
+.export-page, .export-page * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  transition: none !important;
+  animation: none !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.export-page table {
+  display: table !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 1.5em 0 !important;
+  table-layout: auto !important;
+  overflow: visible !important;
+}
+
+.export-page th, .export-page td {
+  border: 1px solid #E5E5E5 !important;
+  padding: 0.8em !important;
+  background-clip: padding-box !important;
+}
+
+/* Remove overflow wrappers in exports to avoid html2canvas clipping */
+.export-page .overflow-x-auto {
+  overflow: visible !important;
+  display: block !important;
 }

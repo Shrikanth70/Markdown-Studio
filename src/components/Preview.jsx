@@ -31,7 +31,8 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
   const [scale, setScale] = useState(0.62);
   const measurerRef = useRef(null);
 
-  const marginPx = 96;
+  const marginPx = 96; // 2.54 cm = 1 inch = 96px at 96 DPI
+  // STRICT equal margin (NO hacks, NO buffer)
   const pageContentLimit = A4_HEIGHT_PX - (marginPx * 2);
   const colorStyle = COLOR_MAP[fontColor] || '#111111';
   const measurerWidth = A4_WIDTH_PX - (marginPx * 2);
@@ -149,40 +150,65 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
       // Precise Top Alignment (v3.2): Reset margin-top for the first element on each page
       const effectiveMarginT = currentHeight === 0 ? 0 : marginT;
       
-      // Fallback height for elements that aren't yet fully laid out or have collapsed heights
-      let childHeight = el.offsetHeight;
-      if (childHeight === 0 && (el.innerText.trim().length > 0 || Tag === 'img')) {
-        // Approximate height based on content or image placeholder if offsetHeight is zero but content exists
-        childHeight = Tag === 'img' ? 300 : 24; 
-      }
+      // Advanced height measurement to prevent clipping
+      let childHeight = Math.max(
+        el.offsetHeight || 0,
+        el.scrollHeight || 0,
+        el.getBoundingClientRect().height || 0
+      );
       
-      // If a single atomic block is taller than the page, it will be clipped anyway.
-      // We cap it here to ensure the engine doesn't break the layout by looking at overflow heights.
-      childHeight = Math.min(childHeight, pageContentLimit);
-      childHeight += effectiveMarginT + marginB;
+      childHeight += (effectiveMarginT + marginB);
+
+      // Cap only absurdly tall blocks (e.g. giant images) to the page limit
+      if (childHeight > pageContentLimit) {
+        childHeight = pageContentLimit;
+      }
 
       const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(Tag);
 
       // Refined Heading Glue Logic (60px)
       const wouldBeAlone = isHeading && (currentHeight + childHeight + 60 > pageContentLimit);
 
-      // Add container margins only for the first item of a split group
-      if (entry.parentTag && entry.isFirstInParent) {
+      // Account for parent container margins (e.g. table/list margins)
+      if (entry.parentTag) {
         const parentEl = el.closest(entry.parentTag);
         if (parentEl) {
           const parentStyle = window.getComputedStyle(parentEl);
-          childHeight += parseFloat(parentStyle.marginTop || 0);
+          if (entry.isFirstInParent) {
+            childHeight += parseFloat(parentStyle.marginTop || 0);
+          }
+          if (entry.isLastInParent) {
+            childHeight += parseFloat(parentStyle.marginBottom || 0);
+          }
         }
       }
 
-      // Atomic break check
-      if ((currentHeight + childHeight > pageContentLimit || wouldBeAlone) && currentPage.length > 0) {
+      // 10. Table Heading Glue (v4.0): 
+      // If a table spans multiple pages, the header (thead) is repeated (see renderAtomicElements). 
+      // We must account for this duplicated header height in our page boundary check.
+      let extraHeightForHeader = 0;
+      if (entry.parentTag === 'table' && !entry.isHeaderRow && entry.isFirstInParent === false && currentPage.length === 0) {
+        const table = el.closest('table');
+        const thead = table ? table.querySelector('thead') : null;
+        if (thead) {
+          // thead.offsetHeight handles the header height for the continuation page
+          extraHeightForHeader = Math.max(thead.offsetHeight, 32); 
+        }
+      }
+
+      // Atomic break check: including the extra header height if we're starting a table continuation page
+      const maxAllowedHeight = pageContentLimit;
+
+      if (
+        currentHeight + childHeight + extraHeightForHeader > maxAllowedHeight &&
+        currentPage.length > 0
+      ) {
         newPages.push(currentPage);
         currentPage = [entry];
-        currentHeight = childHeight;
+        currentHeight = childHeight + extraHeightForHeader;
       } else {
         currentPage.push(entry);
-        currentHeight += childHeight;
+        currentHeight += (childHeight + extraHeightForHeader);
       }
     }
 
@@ -216,7 +242,7 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
     }
   }, [markdown, pageContentLimit]);
 
-  const renderAtomicElements = (atomicEntries) => {
+  const renderAtomicElements = (atomicEntries, isExport = false, keyPrefix = 'block') => {
     const rendered = [];
     let currentGroup = null;
 
@@ -225,6 +251,8 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
       const Tag = el.tagName.toLowerCase();
       const content = { __html: el.innerHTML };
       const className = el.className;
+      // NUCLEAR KEY FIX: Combine prefix, global index, and tag to guarantee uniqueness across re-renders and pages
+      const uniqueKey = `${keyPrefix}-at-${idx}-${Tag}`;
 
       const attributes = {};
       Array.from(el.attributes).forEach(attr => {
@@ -269,40 +297,71 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
         if (ParentTag === 'table') {
           const isHeader = entry.isHeaderRow;
           const target = isHeader ? currentGroup.headers : currentGroup.bodies;
+          
+          // Track column count to optimize 2-column layouts later
+          if (!currentGroup.columnCount && el.children) {
+            currentGroup.columnCount = el.children.length;
+          }
+
           target.push(
-            <tr key={`tr-${idx}`} dangerouslySetInnerHTML={content} className={className} />
+            <tr key={`${uniqueKey}-tr`} dangerouslySetInnerHTML={content} className={className} />
           );
         } else {
           currentGroup.items.push(
-            <Tag key={idx} dangerouslySetInnerHTML={content} className={className} />
+            <Tag key={uniqueKey} dangerouslySetInnerHTML={content} className={className} />
           );
         }
       } else {
         currentGroup = null;
         if (VOID_ELEMENTS.includes(Tag)) {
-          rendered.push(<Tag key={idx} {...attributes} />);
+          rendered.push(<Tag key={uniqueKey} {...attributes} />);
         } else {
-          rendered.push(<Tag key={idx} {...attributes} dangerouslySetInnerHTML={content} />);
+          rendered.push(<Tag key={uniqueKey} {...attributes} dangerouslySetInnerHTML={content} />);
         }
       }
     });
 
     return rendered.map((node, i) => {
+      const outerKey = `${keyPrefix}-group-${i}`;
       if (node.tag) {
         const Container = node.tag;
         if (Container === 'table') {
+          const colCount = node.columnCount || 0;
           return (
-            <div key={i} className="w-full overflow-x-auto no-scrollbar my-6 border border-lightGray/20 rounded-sm">
-              <table className="!my-0">
+            <div
+              key={`${outerKey}-table-wrap`}
+              className={`table-fixed-wrap ${isExport ? "w-full my-6" : "w-full my-6 border border-lightGray/20 rounded-sm"}`}
+              style={{
+                width: "100%",
+                maxWidth: "100%",
+                overflow: "hidden",
+                boxSizing: "border-box"
+              }}
+            >
+              <table
+                className="!my-0"
+                style={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  tableLayout: "auto",
+                  borderCollapse: "collapse"
+                }}
+              >
+                {colCount === 2 && (
+                  <colgroup>
+                    <col style={{ width: "35%" }} />
+                    <col style={{ width: "65%" }} />
+                  </colgroup>
+                )}
                 {node.headers.length > 0 && <thead>{node.headers}</thead>}
                 {node.bodies.length > 0 && <tbody>{node.bodies}</tbody>}
               </table>
             </div>
           );
         }
-        return <Container key={i}>{node.items}</Container>;
+        return <Container key={`${outerKey}-${Container}-wrap`}>{node.items}</Container>;
       }
-      return node;
+      return React.isValidElement(node) ? React.cloneElement(node, { key: outerKey }) : node;
     });
   };
 
@@ -347,34 +406,102 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
             <div
               key={`export-${pageIdx}`}
               className="export-page w-[794px] h-[1123px] bg-white prose-document"
-              style={{ padding: `${marginPx}px`, color: colorStyle }}
+              style={{
+                padding: `${marginPx}px`,
+                boxSizing: "border-box",
+                color: colorStyle
+              }}
             >
               <style>{`
-                .export-page img {
-                  .prose-document * {
-                    max-width: 100%;
-                    overflow-wrap: break-word !important;
-                    text-wrap: pretty;
-                  }
+                .export-page .prose-document *,
+                .page-content * {
+                  max-width: 100%;
+                  box-sizing: border-box;
+                }
 
-                  [align="center"] { text-align: center !important; }
-                  [align="right"] { text-align: right !important; }
-                  [align="left"] { text-align: left !important; }
+                .export-page img,
+                .page-content img {
+                  max-width: 100% !important;
                   object-fit: contain;
                   height: auto;
                   border-radius: 2px;
                   margin: 1.5em auto;
                   display: block;
                 }
+
+                .export-page table,
+                .page-content table {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  table-layout: auto !important;
+                  border-collapse: collapse !important;
+                  margin: 1.5em 0 !important;
+                }
+
+                .export-page th,
+                .export-page td,
+                .page-content th,
+                .page-content td {
+                  white-space: normal !important;
+                  word-break: normal !important;
+                  overflow-wrap: break-word !important;
+                  vertical-align: top !important;
+                  padding: 12px 14px !important;
+                  line-height: 1.5 !important;
+                  border: 1px solid #E5E5E5 !important;
+                  text-align: left !important;
+                }
+
+                .export-page th,
+                .page-content th {
+                  background: #F9F9F9 !important;
+                  font-weight: 700 !important;
+                }
+                
+                .export-page td,
+                .page-content td {
+                  hyphens: auto;
+                }
+
+                [align="center"] { text-align: center !important; }
+                [align="right"] { text-align: right !important; }
+                [align="left"] { text-align: left !important; }
+
+                .page-content,
+                .prose-document {
+                  line-height: 1.6;
+                }
+
+                .page-content > *:first-child,
+                .prose-document > *:first-child {
+                  margin-top: 0 !important;
+                  padding-top: 0 !important;
+                }
+
+                .table-fixed-wrap {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  overflow: hidden !important;
+                  box-sizing: border-box !important;
+                }
               `}</style>
               <div 
-                className="flex-1 flex flex-col items-stretch overflow-visible relative page-content"
-                style={{ outline: outlineStyle, outlineOffset: outlineOffset }}
+                className="flex-1 flex flex-col items-stretch relative page-content"
+                style={{
+                  minHeight: `${pageContentLimit}px`,
+                  maxHeight: 'none', // Allow natural overflow to prevent row skipping, clipped by .export-page overflow if needed
+                  boxSizing: 'border-box',
+                  outline: outlineStyle,
+                  outlineOffset: outlineOffset
+                }}
               >
-                {renderAtomicElements(pageEntries)}
+                {renderAtomicElements(pageEntries, true, `export-page-${pageIdx}`)}
               </div>
 
-              <div className="absolute bottom-[1in] right-[1in] text-[9px] text-lightGray selection:bg-none pointer-events-none uppercase tracking-widest opacity-40">
+              <div 
+                className="absolute text-[9px] text-lightGray pointer-events-none uppercase tracking-widest opacity-40"
+                style={{ bottom: `${marginPx}px`, right: `${marginPx}px` }}
+              >
                 {pageIdx + 1} / {pages.length}
               </div>
             </div>
@@ -400,21 +527,67 @@ const Preview = ({ markdown, border, fontColor, imageWidth }) => {
                 width: `${A4_WIDTH_PX}px`
               }}
             >
+              <style>{`
+                .page-content table {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  table-layout: auto !important;
+                  border-collapse: collapse !important;
+                }
+
+                .page-content th,
+                .page-content td {
+                  white-space: normal !important;
+                  word-break: normal !important;
+                  overflow-wrap: break-word !important;
+                  vertical-align: top !important;
+                  padding: 12px 14px !important;
+                  line-height: 1.5 !important;
+                }
+
+                .page-content th {
+                  font-weight: 700 !important;
+                }
+
+                .page-content td {
+                  hyphens: auto;
+                }
+
+                .page-content .table-fixed-wrap {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  overflow: hidden !important;
+                  box-sizing: border-box !important;
+                }
+              `}</style>
               {pages.length > 0 ? (
                 pages.map((pageEntries, pageIdx) => (
                 <div
                   key={pageIdx}
                   className="document-page relative w-[794px] h-[1123px] bg-white shadow-2xl ring-1 ring-black/5 rounded-sm flex flex-col mb-12"
-                  style={{ padding: `${marginPx}px`, color: colorStyle }}
+                  style={{
+                    padding: `${marginPx}px`,
+                    boxSizing: "border-box",
+                    color: colorStyle
+                  }}
                 >
                   <div 
                     className="flex-1 flex flex-col items-stretch overflow-visible relative page-content prose-document"
-                    style={{ outline: outlineStyle, outlineOffset: outlineOffset }}
+                    style={{
+                      minHeight: `${pageContentLimit}px`,
+                      maxHeight: 'none', // Allow natural overflow to prevent row skipping
+                      boxSizing: 'border-box',
+                      outline: outlineStyle,
+                      outlineOffset: outlineOffset
+                    }}
                   >
-                    {renderAtomicElements(pageEntries)}
+                    {renderAtomicElements(pageEntries, false, `preview-page-${pageIdx}`)}
                   </div>
 
-                  <div className="absolute bottom-[0.5in] right-[0.5in] text-[9px] text-lightGray selection:bg-none pointer-events-none uppercase tracking-widest opacity-40">
+                  <div 
+                    className="absolute text-[9px] text-lightGray pointer-events-none uppercase tracking-widest opacity-40"
+                    style={{ bottom: `${marginPx}px`, right: `${marginPx}px` }}
+                  >
                     {pageIdx + 1} / {pages.length}
                   </div>
                 </div>
